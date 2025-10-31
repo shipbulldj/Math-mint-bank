@@ -232,7 +232,13 @@
             border-radius: 10px;
             font-size: 1.1em;
             line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
         }
+        .message::-webkit-scrollbar { width: 8px; }
+        .message::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .message::-webkit-scrollbar-thumb { background: rgba(74,172,254,0.5); border-radius: 4px; }
+        .message::-webkit-scrollbar-thumb:hover { background: rgba(74,172,254,0.7); }
         .message.success { background: rgba(16,185,129,0.3); border-left: 5px solid #10b981; }
         .message.error { background: rgba(239,68,68,0.3); border-left: 5px solid #ef4444; }
         .message.warning { background: rgba(251,191,36,0.3); border-left: 5px solid #fbbf24; }
@@ -381,7 +387,7 @@
                 
                 <button class="success" onclick="getLeaderboard()" style="width: 100%; margin: 15px 0;">Show Me The Champions!</button>
                 
-                <div id="leaderboardDisplay" class="hidden" style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; margin: 15px 0;"></div>
+                <div id="leaderboardDisplay" class="hidden" style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; margin: 15px 0; max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
         
@@ -736,17 +742,34 @@
         // Blockchain Functions
         async function submitScore() {
             if (!userAddr || !quiz) {
-                showMessage('resultMessage', '🏦 Your Bank Needed!\n\nTo save your score, connect to your bank first.\n\nScroll down and click "Connect to My Bank"', 'warning');
+                showMessage('resultMessage', '🏦 Your Bank Needed!\n\nTo save your score, connect to your bank first.\n\nScroll down and click "Connect to My Own Bank on Mezo"', 'warning');
                 return;
             }
             
             try {
                 showMessage('resultMessage', '⏳ Submitting to blockchain...', '');
-                const tx = await quiz.submitScore(points, MUSD_ADDR);
+                
+                // Check if user has MUSD and boost is enabled
+                let musdToUse = '0x0000000000000000000000000000000000000000'; // Zero address if no MUSD
+                if (boostEnabled && musdBalance >= 1) {
+                    musdToUse = MUSD_ADDR;
+                }
+                
+                const tx = await quiz.submitScore(points, musdToUse);
                 await tx.wait();
                 showMessage('resultMessage', `✅ Score saved! ${points} points added to your total!`, 'success');
             } catch (err) {
-                showMessage('resultMessage', `❌ Failed: ${err.message}`, 'error');
+                console.error('Submit score error:', err);
+                let errorMsg = err.message || 'Unknown error';
+                
+                // Provide helpful error messages
+                if (errorMsg.includes('execution reverted') || errorMsg.includes('UNPREDICTABLE_GAS_LIMIT')) {
+                    errorMsg = '❌ Transaction failed!\n\nPossible reasons:\n• Make sure you have enough tBTC for gas\n• Check that you\'re on Mezo testnet\n• Try playing the quiz again\n\nGet free tBTC: faucet.mezo.org';
+                } else if (errorMsg.includes('user rejected')) {
+                    errorMsg = '❌ You cancelled the transaction. Click "Save Points" again when ready!';
+                }
+                
+                showMessage('resultMessage', errorMsg, 'error');
             }
         }
         
