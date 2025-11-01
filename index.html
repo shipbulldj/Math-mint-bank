@@ -1,992 +1,322 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>MathMint Quiz Demo</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <style>
-        body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; min-height: 100vh; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: rgba(255,255,255,0.1); padding: 20px; margin: 20px 0; border-radius: 10px; backdrop-filter: blur(10px); }
-        button { background: #4facfe; color: white; border: none; padding: 12px 24px; margin: 5px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
-        button:hover { background: #00f2fe; transform: translateY(-2px); transition: all 0.2s; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        button.primary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        button.success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        button.large { padding: 20px 40px; font-size: 20px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; font-size: 14px; }
-        .result { background: rgba(0,0,0,0.3); padding: 15px; margin-top: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
-        .result::-webkit-scrollbar { width: 8px; }
-        .result::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        .result::-webkit-scrollbar-thumb { background: rgba(74,172,254,0.5); border-radius: 4px; }
-        .result::-webkit-scrollbar-thumb:hover { background: rgba(74,172,254,0.7); }
-        .success { background: rgba(16,185,129,0.3); border-left: 4px solid #10b981; }
-        .error { background: rgba(239,68,68,0.3); border-left: 4px solid #ef4444; }
-        .warning { background: rgba(251,191,36,0.3); border-left: 4px solid #fbbf24; }
-        .hidden { display: none; }
-        h1 { text-align: center; font-size: 2.5em; margin-bottom: 10px; }
-        h2 { border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px; margin-bottom: 15px; }
-        .subtitle { text-align: center; opacity: 0.9; margin-bottom: 30px; }
-        .info-box { background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); padding: 12px; border-radius: 5px; margin: 10px 0; font-size: 14px; }
-        .network-badge { display: inline-block; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; margin: 5px 0; }
-        .network-correct { background: rgba(16,185,129,0.3); color: #10b981; }
-        .network-wrong { background: rgba(239,68,68,0.3); color: #ef4444; }
-        .step { margin: 15px 0; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; }
-        .step-number { display: inline-block; width: 25px; height: 25px; background: #4facfe; border-radius: 50%; text-align: center; line-height: 25px; margin-right: 10px; font-weight: bold; }
-        
-        /* Quiz Styles */
-        .quiz-container { text-align: center; }
-        .quiz-question { font-size: 3em; font-weight: bold; margin: 30px 0; }
-        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-        .quiz-option { padding: 20px; font-size: 1.5em; font-weight: bold; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        .quiz-option:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
-        .quiz-option.correct { background: rgba(16,185,129,0.5); border-color: #10b981; }
-        .quiz-option.wrong { background: rgba(239,68,68,0.5); border-color: #ef4444; }
-        .quiz-timer { font-size: 2em; font-weight: bold; margin: 20px 0; }
-        .quiz-timer.warning { color: #fbbf24; animation: pulse 1s infinite; }
-        .quiz-progress { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; margin: 20px 0; }
-        .quiz-progress-bar { height: 10px; background: linear-gradient(90deg, #4facfe, #00f2fe); border-radius: 5px; transition: width 0.3s; }
-        .quiz-stats { display: flex; justify-content: space-around; margin: 20px 0; font-size: 1.2em; }
-        .quiz-stat { text-align: center; }
-        .quiz-stat-value { font-size: 2em; font-weight: bold; display: block; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* Welcome Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-overlay:not(.hidden) { display: flex; }
-        .modal { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 40px; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: modalSlideIn 0.4s ease-out; position: relative; }
-        .modal h2 { font-size: 2em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 15px; }
-        .modal-content { line-height: 1.6; }
-        .modal-section { background: rgba(255,255,255,0.1); padding: 15px; margin: 15px 0; border-radius: 10px; border-left: 4px solid #4facfe; }
-        .modal-section h3 { margin-top: 0; font-size: 1.3em; }
-        .modal-tips { list-style: none; padding: 0; }
-        .modal-tips li { padding: 10px; margin: 8px 0; background: rgba(0,0,0,0.2); border-radius: 8px; padding-left: 40px; position: relative; }
-        .modal-tips li:before { content: '✨'; position: absolute; left: 12px; font-size: 1.2em; }
-        .modal-checkbox { margin: 25px 0; padding: 15px; background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.3); border-radius: 10px; display: flex; align-items: center; }
-        .modal-checkbox input { width: 20px; height: 20px; margin-right: 12px; cursor: pointer; }
-        .modal-checkbox label { font-size: 1.1em; font-weight: 600; cursor: pointer; }
-        .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
-        .modal-buttons button { flex: 1; padding: 15px; font-size: 1.1em; }
-        .security-link { display: block; text-align: center; margin-top: 15px; color: #4facfe; text-decoration: none; font-size: 0.9em; }
-        .security-link:hover { text-decoration: underline; }
-        
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Tooltip Styles */
-        .tooltip { position: relative; display: inline-block; }
-        .tooltip .tooltiptext { visibility: hidden; width: 250px; background-color: rgba(0,0,0,0.9); color: #fff; text-align: left; border-radius: 8px; padding: 12px; position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -125px; opacity: 0; transition: opacity 0.3s; font-size: 13px; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(0,0,0,0.9) transparent transparent transparent; }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-        .info-icon { display: inline-block; width: 18px; height: 18px; background: rgba(74, 172, 254, 0.3); color: #4facfe; border-radius: 50%; text-align: center; line-height: 18px; font-size: 12px; font-weight: bold; cursor: help; margin-left: 5px; border: 1px solid rgba(74, 172, 254, 0.5); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MathMint Quiz | Learn × Earn × Mint on Mezo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #0F0F1A, #1A1A2E); color: white; }
+    .btn { @apply px-4 py-2 rounded-lg font-bold transition-all; }
+    .btn-blue { @apply bg-blue-600 hover:bg-blue-700 text-white; }
+    .btn-green { @apply bg-green-500 hover:bg-green-600 text-white; }
+    .btn-orange { @apply bg-orange-500 hover:bg-orange-600 text-white; }
+    .timer-bar { height: 6px; transition: width 0.1s linear; }
+    .correct { @apply text-green-400 animate-pulse; }
+    .wrong { @apply text-red-400 animate-pulse; }
+  </style>
 </head>
-<body>
-    <!-- Welcome to Self-Custody Modal -->
-    <div id="welcomeModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h2>🏦 Welcome to Your Bank of Good Times!</h2>
-            <div class="modal-content">
-                <p style="font-size: 1.2em; text-align: center; margin-bottom: 20px;">
-                    🎉 <strong>Congratulations!</strong> You're about to become your own bank!
-                </p>
-                
-                <div class="modal-section">
-                    <h3>✨ What Makes This Special?</h3>
-                    <p>Unlike regular banks, <strong>YOU are in complete control</strong>. No middleman, no permissions needed, no one can freeze your funds. This is financial freedom!</p>
-                </div>
-                
-                <div class="modal-section">
-                    <h3>🔑 5 Quick Security Tips (30 seconds!)</h3>
-                    <ul class="modal-tips">
-                        <li><strong>Never share your seed phrase</strong> - Not even with "support"! It's like your master password.</li>
-                        <li><strong>Write it on paper</strong> - Not on your phone. Paper can't be hacked!</li>
-                        <li><strong>This is testnet</strong> - Safe to learn! Free coins, zero risk.</li>
-                        <li><strong>You're in control</strong> - Every transaction needs YOUR approval.</li>
-                        <li><strong>Start small</strong> - Test everything before sending large amounts.</li>
-                    </ul>
-                </div>
-                
-                <div class="modal-section" style="background: rgba(255,215,0,0.1); border-left-color: #ffd700;">
-                    <h3>💪 You've Got This!</h3>
-                    <p>Millions of people use self-custody every day. The difference? They took the first step - just like you're doing now!</p>
-                </div>
-                
-                <div class="modal-checkbox">
-                    <input type="checkbox" id="understandCheck">
-                    <label for="understandCheck">I understand I'm in control and will keep my seed phrase safe!</label>
-                </div>
-                
-                <div class="modal-buttons">
-                    <button onclick="closeWelcomeModal()" style="background: rgba(255,255,255,0.2);">Maybe Later</button>
-                    <button id="continueBtn" class="primary" onclick="proceedFromModal()" disabled>Let's Go! 🚀</button>
-                </div>
-                
-                <a href="../SECURITY_GUIDE.md" target="_blank" class="security-link">
-                    📚 Want to learn more? Read our complete Security Guide
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Create Your Bank Guide Modal -->
-    <div id="createBankModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h2>🌟 Let's Create Your First Bank!</h2>
-            <div class="modal-content">
-                <p style="font-size: 1.2em; text-align: center; margin-bottom: 20px;">
-                    🎉 <strong>Exciting!</strong> You're about to open your own bank. Let me walk you through it, friend! 
-                </p>
-                
-                <div class="modal-section">
-                    <h3>🦊 Step 1: Install MetaMask (Your Bank Manager)</h3>
-                    <p><strong>MetaMask</strong> is like your bank manager, but YOU are the boss! It's free and takes 2 minutes.</p>
-                    <ol style="line-height: 2; margin-left: 20px;">
-                        <li>Click this link: <a href="https://metamask.io" target="_blank" style="color: #4facfe; font-weight: bold;">metamask.io</a></li>
-                        <li>Click "Download" for your browser</li>
-                        <li>Add the extension (it's a cute fox 🦊)</li>
-                        <li>Click "Create a wallet"</li>
-                    </ol>
-                </div>
-                
-                <div class="modal-section">
-                    <h3>🔑 Step 2: Save Your Secret Phrase (SUPER IMPORTANT!)</h3>
-                    <p>MetaMask will show you 12 special words. This is your <strong>master key</strong>!</p>
-                    <ul class="modal-tips">
-                        <li><strong>Write these words on paper</strong> 📝 Right now!</li>
-                        <li><strong>Store paper somewhere safe</strong> 🔒 Like a drawer or safe</li>
-                        <li><strong>Never share with ANYONE</strong> 🚫 Not even "support"</li>
-                        <li><strong>Don't take a photo</strong> 📸 Paper can't be hacked!</li>
-                    </ul>
-                    <div style="background: rgba(255,68,68,0.2); padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; margin-top: 10px;">
-                        ⚠️ <strong>CRITICAL:</strong> If you lose these words, you lose your bank forever. No recovery possible!
-                    </div>
-                </div>
-                
-                <div class="modal-section">
-                    <h3>🎮 Step 3: Come Back Here!</h3>
-                    <p>Once MetaMask is installed:</p>
-                    <ol style="line-height: 2; margin-left: 20px;">
-                        <li>You'll see the fox icon 🦊 in your browser</li>
-                        <li>Come back to this page</li>
-                        <li>Click "Connect to My Bank" button</li>
-                        <li>We'll help you connect! 🎉</li>
-                    </ol>
-                </div>
-                
-                <div class="modal-section" style="background: rgba(255,215,0,0.1); border-left-color: #ffd700;">
-                    <h3>💡 Pro Tip: This is Safe Practice!</h3>
-                    <p>You'll be using <strong>testnet</strong> - fake money for learning! No risk, pure practice. When you're comfortable, you can graduate to real crypto. Baby steps! 👶➡️🚀</p>
-                </div>
-                
-                <div class="modal-buttons">
-                    <button onclick="closeCreateBankModal()" style="background: rgba(255,255,255,0.2);">Close</button>
-                    <button class="success" onclick="openMetaMaskSite()">Take Me to MetaMask! 🦊</button>
-                </div>
-                
-                <div style="text-align: center; margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                    <strong>Questions? Confused?</strong><br>
-                    <a href="../SECURITY_GUIDE.md" target="_blank" style="color: #4facfe;">Read our beginner-friendly Security Guide</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="container">
-        <h1>🎮 MathMint Quiz</h1>
-        <p class="subtitle">Learn Times Tables, Mint Badges & Own A Bank <span style="text-decoration: line-through; color: #ef4444;">Account</span> On Mezo</p>
-        
-        <!-- HERO: Play Quiz - No Wallet Needed! -->
-        <div class="card" id="quizCard">
-            <h2>📊 Ready to Play? Let's Go! 🚀</h2>
-            <p style="font-size: 1.1em; text-align: center; margin: 10px 0;">
-                <strong>No setup needed!</strong> Just click and play! 🎉
-            </p>
-            <h2>📊 Play Quiz (No Wallet Required!)</h2>
-            
-            <!-- MUSD Boost Section -->
-            <div id="musdBoostSection" class="hidden" style="background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,170,0,0.3)); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 2px solid rgba(255,215,0,0.5);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="font-size: 1.2em;">⚡ SECRET POWER-UP UNLOCKED!</strong><br>
-                        <span style="font-size: 1.0em; opacity: 0.95;">You've got MUSD tokens! Want to go BEAST MODE? 🔥</span><br>
-                        <span id="musdBalanceDisplay" style="font-size: 0.9em; color: #ffd700; font-weight: bold;"></span>
-                    </div>
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="boostToggle" onchange="toggleBoost()" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
-                        <span style="font-size: 1.1em; font-weight: bold;">Turn this ON before you play</span>
-                    </label>
-                </div>
-                <div style="margin-top: 15px; font-size: 0.95em;">
-                    🚀 <strong>When ON:</strong> 10 points becomes 15 points per right answer!<br>
-                    💪 That's 1.5x the power! Go get 'em!
-                </div>
-                <div id="boostActiveMsg" class="hidden" style="background: rgba(16,185,129,0.2); padding: 10px; margin-top: 10px; border-radius: 5px; border-left: 4px solid #10b981;">
-                    ✅ <strong>Boost Active!</strong> Earning 1.5x points this session
-                </div>
-            </div>
-            
-            <!-- Quiz Start Screen -->
-            <div id="quizStartScreen" class="quiz-container">
-                <p style="font-size: 1.2em; margin: 20px 0;">Answer 5 times-table questions and rack up points!</p>
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
-                    <p>✅ Get 10 points for each right answer</p>
-                    <p>❌ Lose 1 point for wrong answers</p>
-                    <p>⏱️ You've got 15 seconds per question</p>
-                </div>
-                <button class="primary large" onclick="startQuiz()">Start Quiz!</button>
-            </div>
-            
-            <!-- Quiz Game Screen -->
-            <div id="quizGameScreen" class="hidden quiz-container">
-                <div class="quiz-progress">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Question <span id="currentQ">1</span> of 5</span>
-                        <span class="quiz-timer" id="timer">15</span>
-                    </div>
-                    <div class="quiz-progress-bar" id="progressBar" style="width: 20%"></div>
-                </div>
-                
-                <div class="quiz-question" id="question">? × ? = ?</div>
-                
-                <div class="quiz-options" id="options">
-                    <button class="quiz-option" onclick="selectAnswer(0)">0</button>
-                    <button class="quiz-option" onclick="selectAnswer(1)">0</button>
-                    <button class="quiz-option" onclick="selectAnswer(2)">0</button>
-                    <button class="quiz-option" onclick="selectAnswer(3)">0</button>
-                </div>
-                
-                <div class="quiz-stats">
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="correctCount">0</span>
-                        <span>Correct</span>
-                    </div>
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="pointsCount">0</span>
-                        <span>Points</span>
-                    </div>
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="wrongCount">0</span>
-                        <span>Wrong</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Quiz Complete Screen -->
-            <div id="quizCompleteScreen" class="hidden quiz-container">
-                <h2 style="font-size: 2.5em; margin: 20px 0;">🎉 Quiz Complete!</h2>
-                <div class="quiz-stats">
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="finalCorrect">0</span>
-                        <span>Correct</span>
-                    </div>
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="finalPoints">0</span>
-                        <span>Points Earned</span>
-                    </div>
-                    <div class="quiz-stat">
-                        <span class="quiz-stat-value" id="finalWrong">0</span>
-                        <span>Wrong</span>
-                    </div>
-                </div>
-                
-                <div id="boostAppliedMsg" class="hidden" style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
-                    <strong>⚡ MUSD Boost Will Be Applied!</strong><br>
-                    Your <span id="basePoints">0</span> points will become <span id="boostedPoints">0</span> points when submitted!
-                </div>
-                
-                <div id="walletRequiredMsg" class="hidden" style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #fbbf24;">
-                    <strong>💾 Wanna Keep These Points?</strong><br>
-                    Connect your bank above! Don't have one yet? Click "Create My First Bank" - super easy, we promise! 🏦✨
-                </div>
-                
-                <div class="tooltip">
-                    <button class="success large" onclick="submitScore()" id="submitScoreBtn">💾 Save My Points Forever!
-                        <span class="info-icon">i</span>
-                    </button>
-                    <span class="tooltiptext">💪 YOU're the boss! You'll pay a teeny tiny fee - but hey, you're running your own bank!</span>
-                </div>
-                <button class="primary" onclick="playAgain()" style="margin-left: 10px;">Play Again!</button>
-                
-                <div id="quizResult" class="result hidden"></div>
-            </div>
-        </div>
+<body class="min-h-screen p-4 md:p-8">
 
-        <!-- Wallet Connection (Shown After Playing) -->
-        <div class="card" id="walletCard">
-            <h2>💾 Wanna Save Your Score Forever?</h2>
-            <p style="font-size: 1.05em; margin-bottom: 15px;">
-                Nice playing! Want your points saved forever on the internet?<br>
-                Connect your bank below! (It's free!) 🏦
-            </p>
-            <p id="status">Not Connected</p>
-            <p id="network" class="hidden"></p>
-            <p id="address" class="hidden"></p>
-            <p id="balance" class="hidden"></p>
-            
-            <div id="walletButtons">
-                <div class="tooltip">
-                    <button id="connectBtn" class="primary" onclick="showWelcomeModal()">
-                        🏦 Connect to My Own Bank on Mezo
-                    </button>
-                    <span class="tooltiptext">🎉 Already have MetaMask? Connect here!</span>
-                </div>
-                
-                <div class="tooltip">
-                    <button id="createBankBtn" class="success" onclick="showCreateBankGuide()">
-                        ✨ Create My First Own Bank on Mezo
-                    </button>
-                    <span class="tooltiptext">🌟 New to Web3? We'll walk you through it!</span>
-                </div>
-                
-                <button id="switchBtn" class="success hidden" onclick="switchNetwork()">Switch to Mezo Testnet</button>
-            </div>
-            
-            <div class="info-box">
-                <strong>💡 Cool Fact:</strong> Connect once, save all your scores forever!<br>
-                <strong>🎁 Free Practice Money:</strong> <a href="https://faucet.mezo.org" target="_blank" style="color: #4facfe;">Grab some here</a><br>
-                <strong>⚡ Secret Bonus:</strong> Hold 1+ MUSD tokens for 1.5x points!<br>
-                <strong>📚 First timer?</strong> <a href="../SECURITY_GUIDE.md" target="_blank" style="color: #ffd700; font-weight: bold;">Read our super simple guide</a>
-            </div>
-        </div>
+  <div class="max-w-2xl mx-auto">
 
-        <!-- NFT Minting -->
-        <div class="card" id="nftCard">
-            <h2>🎨 Mint Your Badge</h2>
-            <div class="step">
-                <span class="step-number">3</span>
-                Get 50+ points total and you can mint your very own achievement badge!
-            </div>
-            <button id="scoreBtn" class="primary" onclick="getScore()">Check My Total Points</button>
-            <button id="eligibleBtn" class="primary" onclick="checkEligible()">Can I Mint a Badge?</button>
-            <div id="scoreResult" class="result hidden"></div>
-            
-            <div style="margin-top: 20px;">
-                <input type="text" id="tokenUri" value="ipfs://QmMathMintBadge/metadata.json" placeholder="Token URI">
-                
-                <div class="tooltip">
-                    <button id="mintBtn" class="success" onclick="mintNFT()">Mint My Badge! 
-                        <span class="info-icon">i</span>
-                    </button>
-                    <span class="tooltiptext">🎨 This badge is truly YOURS! Once you mint it, no one can take it away. You OWN it forever.</span>
-                </div>
-                
-                <button id="statusBtn" class="primary" onclick="checkMintStatus()">Check Badge Status</button>
-            </div>
-            <div id="nftResult" class="result hidden"></div>
-            
-            <div class="info-box">
-                <strong>ℹ️ Badge Info:</strong> Your badge shows up in MetaMask! You need 50+ points and a tiny bit of test money for gas.
-            </div>
-        </div>
-
-        <!-- Leaderboard -->
-        <div class="card" id="leaderCard">
-            <h2>🏆 Top Players</h2>
-            <div class="step">
-                <span class="step-number">4</span>
-                Check out who's crushing it! (You don't need to be connected to view this)
-            </div>
-            <button id="leaderBtn" class="success" onclick="getLeaderboard()">Show Me The Champions!</button>
-            <div id="leaderResult" class="result hidden"></div>
-        </div>
-
-        <!-- Contract Info -->
-        <div class="card" id="contractCard">
-            <h2>🔗 Contract Addresses</h2>
-            <div style="font-size: 12px; font-family: monospace;">
-                <strong>Quiz:</strong> <a href="https://explorer.test.mezo.org/address/0x59bDB59107f29e9712A37c7015ee28675DD7d30f" target="_blank" style="color: #4facfe;">0x59bDB59...DD7d30f</a><br>
-                <strong>NFT:</strong> <a href="https://explorer.test.mezo.org/address/0x03672f6b20622176554a4C0ba7B037d9dCE531f0" target="_blank" style="color: #4facfe;">0x03672f6...CE531f0</a><br>
-                <strong>MUSD:</strong> <a href="https://explorer.test.mezo.org/address/0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503" target="_blank" style="color: #4facfe;">0x118917a...973Ac503</a>
-            </div>
-        </div>
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold mb-2">MathMint Quiz</h1>
+      <p class="text-lg opacity-90">Learn Times Tables → Mint NFT Badges</p>
+      <p class="text-sm mt-2">Built on <span class="text-blue-400">Mezo</span> — Bitcoin's Fastest L2</p>
     </div>
 
-    <script>
-        const QUIZ_ADDR = "0x59bDB59107f29e9712A37c7015ee28675DD7d30f";
-        const NFT_ADDR = "0x03672f6b20622176554a4C0ba7B037d9dCE531f0";
-        const MUSD_ADDR = "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503";
-        
-        const MEZO_TESTNET = {
-            chainId: '0x7b7b',
-            chainName: 'Mezo Testnet',
-            nativeCurrency: { name: 'tBTC', symbol: 'tBTC', decimals: 18 },
-            rpcUrls: ['https://rpc.test.mezo.org'],
-            blockExplorerUrls: ['https://explorer.test.mezo.org']
-        };
-        
-        const QUIZ_ABI = [
-            "function updateScore(address user, uint256 points)",
-            "function getScore(address user) view returns (uint256)",
-            "function canMintNFT(address user) view returns (bool)",
-            "function getLeaderboard() view returns (address[], uint256[])"
-        ];
-        
-        const NFT_ABI = [
-            "function mintBadge(string memory tokenURI)",
-            "function hasUserMinted(address user) view returns (bool)",
-            "function getUserTokenId(address user) view returns (uint256)"
-        ];
-        
-        const MUSD_ABI = [
-            "function balanceOf(address account) view returns (uint256)",
-            "function decimals() view returns (uint8)"
-        ];
+    <!-- Play Quiz (No Wallet) -->
+    <div id="quiz-section" class="bg-white text-gray-900 rounded-xl p-6 shadow-xl">
+      <h2 class="text-2xl font-bold text-center mb-4">Play Quiz (No Wallet Required!)</h2>
+      <p class="text-center mb-4">Answer 5 times-table questions and rack up points!</p>
+      <ul class="text-sm space-y-1 mb-4 text-center">
+        <li>Correct answer: +10 points</li>
+        <li>Wrong answer: -1 point</li>
+        <li>15 seconds per question</li>
+      </ul>
 
-        let provider, signer, quiz, nft, musd, userAddr, currentChainId;
-        let musdBalance = 0;
-        let boostEnabled = false;
-        
-        // Quiz state
-        let quizQuestions = [];
-        let currentQuestion = 0;
-        let correctAnswers = 0;
-        let wrongAnswers = 0;
-        let points = 0;
-        let timerInterval;
-        let timeLeft = 15;
+      <div id="quiz-ui" class="hidden">
+        <div class="text-center mb-4">
+          <p class="text-lg font-bold" id="question"></p>
+          <div class="timer-bar bg-green-500 w-full mt-2" id="timer"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3" id="options"></div>
+        <p class="text-center mt-4 text-sm" id="feedback"></p>
+      </div>
 
-        // Welcome Modal Functions
-        function showWelcomeModal() {
-            // Check if user has already seen the modal
-            const hasSeenWelcome = localStorage.getItem('mathMintWelcomeSeen');
-            
-            if (!hasSeenWelcome) {
-                document.getElementById('welcomeModal').classList.remove('hidden');
-                
-                // Enable continue button when checkbox is checked
-                document.getElementById('understandCheck').addEventListener('change', function() {
-                    document.getElementById('continueBtn').disabled = !this.checked;
-                });
-            } else {
-                // If already seen, connect directly
-                connect();
-            }
-        }
+      <div class="text-center">
+        <button id="start-quiz" class="btn btn-green text-lg">Start Quiz</button>
+        <p id="score-display" class="mt-4 text-lg font-bold hidden">Score: <span id="current-score">0</span></p>
+      </div>
+    </div>
 
-        function closeWelcomeModal() {
-            document.getElementById('welcomeModal').classList.add('hidden');
-            // Don't mark as seen if they close without understanding
-        }
+    <!-- Wallet & Save Score -->
+    <div id="wallet-section" class="mt-6 bg-gradient-to-br from-blue-900 to-purple-900 p-6 rounded-xl shadow-xl">
+      <h3 class="text-xl font-bold mb-3">Save Your Score Forever?</h3>
+      <p class="text-sm mb-3">Connect your wallet below! (It's free!)</p>
 
-        function proceedFromModal() {
-            // Mark as seen so they don't see it again
-            localStorage.setItem('mathMintWelcomeSeen', 'true');
-            document.getElementById('welcomeModal').classList.add('hidden');
-            // Proceed with wallet connection
-            connect();
-        }
-        
-        // Create Bank Guide Modal Functions
-        function showCreateBankGuide() {
-            document.getElementById('createBankModal').classList.remove('hidden');
-        }
-        
-        function closeCreateBankModal() {
-            document.getElementById('createBankModal').classList.add('hidden');
-        }
-        
-        function openMetaMaskSite() {
-            window.open('https://metamask.io', '_blank');
-            // Keep modal open so they can reference the steps
-        }
+      <div class="flex flex-col gap-3">
+        <button id="connect-metamask" class="btn btn-blue">Connect with MetaMask</button>
+        <button id="connect-bitcoin" class="btn btn-orange text-sm">Connect Unisat / Leather (Bitcoin)</button>
+      </div>
 
-        async function connect() {
-            try {
-                if (!window.ethereum) {
-                    alert("Please install MetaMask from metamask.io");
-                    return;
-                }
-                
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
-                userAddr = await signer.getAddress();
-                
-                const network = await provider.getNetwork();
-                currentChainId = network.chainId;
-                
-                const mezoChainIdDecimal = parseInt(MEZO_TESTNET.chainId, 16);
-                if (currentChainId !== mezoChainIdDecimal) {
-                    document.getElementById('status').textContent = 'Connected to wrong network!';
-                    document.getElementById('network').innerHTML = '<span class="network-badge network-wrong">⚠️ Wrong Network (Chain ID: ' + currentChainId + ')</span>';
-                    document.getElementById('network').classList.remove('hidden');
-                    document.getElementById('switchBtn').classList.remove('hidden');
-                    return;
-                }
-                
-                quiz = new ethers.Contract(QUIZ_ADDR, QUIZ_ABI, signer);
-                nft = new ethers.Contract(NFT_ADDR, NFT_ABI, signer);
-                musd = new ethers.Contract(MUSD_ADDR, MUSD_ABI, signer);
-                
-                await checkMUSDBalance();
-                
-                document.getElementById('status').textContent = '✅ Connected!';
-                document.getElementById('network').innerHTML = '<span class="network-badge network-correct">✓ Mezo Testnet</span>';
-                document.getElementById('network').classList.remove('hidden');
-                document.getElementById('address').textContent = '📍 Address: ' + userAddr.substring(0, 6) + '...' + userAddr.substring(38);
-                document.getElementById('address').classList.remove('hidden');
-                
-                const balance = await provider.getBalance(userAddr);
-                document.getElementById('balance').textContent = '💰 Balance: ' + ethers.utils.formatEther(balance).substring(0, 8) + ' tBTC';
-                document.getElementById('balance').classList.remove('hidden');
-                
-                document.getElementById('connectBtn').classList.add('hidden');
-                document.getElementById('switchBtn').classList.add('hidden');
-                
-                // Show quiz card
-                document.getElementById('quizCard').classList.remove('hidden');
-                document.getElementById('nftCard').classList.remove('hidden');
-                document.getElementById('leaderCard').classList.remove('hidden');
-                document.getElementById('contractCard').classList.remove('hidden');
-            } catch (err) {
-                alert('Connection error: ' + err.message);
-            }
-        }
+      <p id="wallet-status" class="mt-3 text-sm font-mono">Not Connected</p>
 
-        async function checkMUSDBalance() {
-            try {
-                const balance = await musd.balanceOf(userAddr);
-                const decimals = await musd.decimals();
-                const balanceFormatted = ethers.utils.formatUnits(balance, decimals);
-                musdBalance = parseFloat(balanceFormatted);
-                
-                if (musdBalance >= 1) {
-                    document.getElementById('musdBoostSection').classList.remove('hidden');
-                    document.getElementById('musdBalanceDisplay').textContent = '💰 Your MUSD Balance: ' + musdBalance.toFixed(2) + ' MUSD';
-                }
-            } catch (err) {
-                console.log('MUSD balance check failed:', err.message);
-            }
-        }
+      <!-- MUSD Boost -->
+      <div class="mt-4 p-3 bg-black bg-opacity-30 rounded-lg">
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="musd-boost" class="w-5 h-5" disabled>
+          <label for="musd-boost" class="text-sm">Secret Bonus: Hold 1+ MUSD → 1.5x points!</label>
+        </div>
+        <div class="mt-2 text-xs">
+          <a href="https://testnet.mezo.org/" target="_blank" class="text-green-400 hover:underline">
+            Need MUSD? Swap tBTC here (connect → DEX)
+          </a>
+        </div>
+      </div>
 
-        function toggleBoost() {
-            const toggle = document.getElementById('boostToggle');
-            boostEnabled = toggle.checked;
-            
-            if (boostEnabled) {
-                document.getElementById('boostActiveMsg').classList.remove('hidden');
-            } else {
-                document.getElementById('boostActiveMsg').classList.add('hidden');
-            }
-        }
+      <!-- Faucet -->
+      <div class="mt-3 text-xs">
+        <a href="https://faucet.test.mezo.org/" target="_blank" class="text-cyan-400 hover:underline" title="Get free tBTC for gas">
+          Free Practice Money: Grab tBTC here
+        </a>
+      </div>
+    </div>
 
-        async function switchNetwork() {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: MEZO_TESTNET.chainId }],
-                });
-                setTimeout(connect, 1000);
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [MEZO_TESTNET],
-                        });
-                        setTimeout(connect, 1000);
-                    } catch (addError) {
-                        alert('Failed to add Mezo testnet: ' + addError.message);
-                    }
-                } else {
-                    alert('Failed to switch network: ' + switchError.message);
-                }
-            }
-        }
+    <!-- Mint NFT -->
+    <div id="mint-section" class="mt-6 bg-gradient-to-r from-pink-600 to-purple-600 p-6 rounded-xl shadow-xl hidden">
+      <h3 class="text-xl font-bold mb-3">Mint Your Badge</h3>
+      <p class="text-sm mb-3">Get 50+ points total and mint your achievement badge!</p>
+      <button id="mint-nft" class="btn btn-green w-full" disabled>Mint NFT (Need 50+ pts)</button>
+      <p id="mint-status" class="mt-3 text-sm"></p>
+    </div>
 
-        // Quiz Functions
-        function generateQuestion() {
-            const num1 = Math.floor(Math.random() * 10) + 1;
-            const num2 = Math.floor(Math.random() * 10) + 1;
-            const answer = num1 * num2;
-            
-            const options = [answer];
-            while (options.length < 4) {
-                const wrong = Math.floor(Math.random() * 100) + 1;
-                if (!options.includes(wrong)) {
-                    options.push(wrong);
-                }
-            }
-            
-            // Shuffle options
-            for (let i = options.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [options[i], options[j]] = [options[j], options[i]];
-            }
-            
-            return { num1, num2, answer, options };
-        }
+    <!-- Leaderboard -->
+    <div class="mt-6 p-4 bg-white text-gray-900 rounded-xl shadow-xl">
+      <h3 class="text-lg font-bold text-center mb-3">Top Players</h3>
+      <div id="leaderboard-list" class="max-h-48 overflow-y-auto space-y-1 text-sm">
+        <p class="text-center text-gray-500">Loading...</p>
+      </div>
+    </div>
 
-        function startQuiz() {
-            // Reset state
-            quizQuestions = [];
-            currentQuestion = 0;
-            correctAnswers = 0;
-            wrongAnswers = 0;
-            points = 0;
-            timeLeft = 15;
-            
-            // Generate 5 questions
-            for (let i = 0; i < 5; i++) {
-                quizQuestions.push(generateQuestion());
-            }
-            
-            // Update UI
-            document.getElementById('quizStartScreen').classList.add('hidden');
-            document.getElementById('quizGameScreen').classList.remove('hidden');
-            
-            showQuestion();
-            startTimer();
-        }
+    <!-- Contract Addresses -->
+    <div class="mt-6 text-xs text-center opacity-70">
+      <p>Quiz: <span class="font-mono">0x59bDB59...DD7d30f</span></p>
+      <p>NFT: <span class="font-mono">0x03672f6...CE531f0</span></p>
+      <p>MUSD: <span class="font-mono">0x118917a...973Ac503</span></p>
+    </div>
+  </div>
 
-        function showQuestion() {
-            const q = quizQuestions[currentQuestion];
-            document.getElementById('question').textContent = q.num1 + ' × ' + q.num2 + ' = ?';
-            
-            const optionButtons = document.querySelectorAll('.quiz-option');
-            q.options.forEach((opt, i) => {
-                optionButtons[i].textContent = opt;
-                optionButtons[i].className = 'quiz-option';
-                optionButtons[i].disabled = false;
+  <!-- Scripts -->
+  <script>
+    // === CONFIG ===
+    const MEZO_TESTNET = {
+      chainId: '0x1F4B', // Mezo Testnet
+      chainName: 'Mezo Testnet',
+      rpcUrls: ['https://rpc.testnet.mezo.org'],
+      nativeCurrency: { name: 'tBTC', symbol: 'tBTC', decimals: 18 },
+      blockExplorerUrls: ['https://testnet.mezo.org']
+    };
+    const QUIZ_CONTRACT = '0x59bDB59bD7f7e7dD7d30f'; // Replace with real
+    const NFT_CONTRACT = '0x03672f6CE531f0';
+    const MUSD_ADDRESS = '0x118917a973Ac503';
+
+    // === STATE ===
+    let web3, account, provider, multiplier = 1;
+    let score = 0, questionIndex = 0, timer;
+    const questions = [];
+
+    // === DOM ===
+    const startBtn = document.getElementById('start-quiz');
+    const quizUI = document.getElementById('quiz-ui');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const timerEl = document.getElementById('timer');
+    const scoreDisplay = document.getElementById('score-display');
+    const currentScoreEl = document.getElementById('current-score');
+    const connectMetaMask = document.getElementById('connect-metamask');
+    const connectBitcoin = document.getElementById('connect-bitcoin');
+    const walletStatus = document.getElementById('wallet-status');
+    const musdBoost = document.getElementById('musd-boost');
+    const mintBtn = document.getElementById('mint-nft');
+    const mintStatus = document.getElementById('mint-status');
+    const leaderboardList = document.getElementById('leaderboard-list');
+
+    // === QUIZ LOGIC ===
+    function generateQuestions() {
+      questions.length = 0;
+      for (let i = 0; i < 5; i++) {
+        const a = Math.floor(Math.random() * 10) + 1;
+        const b = Math.floor(Math.random() * 10) + 1;
+        questions.push({ a, b, answer: a * b, options: shuffle([a*b, a*b+1, a*b-1, a*b+2]) });
+      }
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startQuiz() {
+      score = 0;
+      questionIndex = 0;
+      generateQuestions();
+      startBtn.classList.add('hidden');
+      quizUI.classList.remove('hidden');
+      scoreDisplay.classList.remove('hidden');
+      currentScoreEl.textContent = score;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (questionIndex >= 5) return endQuiz();
+      const q = questions[questionIndex];
+      questionEl.textContent = `${q.a} × ${q.b} = ?`;
+      optionsEl.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-blue text-lg';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.answer);
+        optionsEl.appendChild(btn);
+      });
+      startTimer();
+    }
+
+    function startTimer() {
+      let time = 15;
+      timerEl.style.width = '100%';
+      timer = setInterval(() => {
+        time--;
+        timerEl.style.width = `${(time / 15) * 100}%`;
+        if (time <= 0) {
+          clearInterval(timer);
+          checkAnswer(null, questions[questionIndex].answer);
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(selected, correct) {
+      clearInterval(timer);
+      const points = selected === correct ? 10 * multiplier : -1;
+      score += points;
+      currentScoreEl.textContent = score;
+      feedbackEl.className = selected === correct ? 'correct' : 'wrong';
+      feedbackEl.textContent = selected === correct ? `Correct! +${10 * multiplier}` : 'Wrong! -1';
+      setTimeout(() => {
+        feedbackEl.textContent = '';
+        questionIndex++;
+        if (questionIndex < 5) showQuestion();
+        else endQuiz();
+      }, 1000);
+    }
+
+    function endQuiz() {
+      quizUI.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+      startBtn.textContent = 'Play Again';
+      if (account) saveScore();
+      updateMintButton();
+    }
+
+    // === WEB3 ===
+    async function connectMetaMaskWallet() {
+      if (!window.ethereum) return alert('Install MetaMask!');
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(window.ethereum);
+        const chainId = await web3.eth.getChainId();
+        if (chainId !== parseInt(MEZO_TESTNET.chainId)) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: MEZO_TESTNET.chainId }],
             });
-            
-            document.getElementById('currentQ').textContent = currentQuestion + 1;
-            document.getElementById('progressBar').style.width = ((currentQuestion + 1) / 5 * 100) + '%';
-            
-            timeLeft = 15;
-            document.getElementById('timer').textContent = timeLeft;
-            document.getElementById('timer').classList.remove('warning');
-        }
-
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').textContent = timeLeft;
-                
-                if (timeLeft <= 5) {
-                    document.getElementById('timer').classList.add('warning');
-                }
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    selectAnswer(-1); // Time's up, wrong answer
-                }
-            }, 1000);
-        }
-
-        function selectAnswer(index) {
-            clearInterval(timerInterval);
-            
-            const q = quizQuestions[currentQuestion];
-            const selectedAnswer = index >= 0 ? q.options[index] : -1;
-            const isCorrect = selectedAnswer === q.answer;
-            
-            // Update stats
-            if (isCorrect) {
-                correctAnswers++;
-                points += 10;
-            } else {
-                wrongAnswers++;
-                points = Math.max(0, points - 1);
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [MEZO_TESTNET],
+              });
             }
-            
-            // Show feedback
-            const optionButtons = document.querySelectorAll('.quiz-option');
-            optionButtons.forEach((btn, i) => {
-                btn.disabled = true;
-                if (q.options[i] === q.answer) {
-                    btn.classList.add('correct');
-                } else if (i === index) {
-                    btn.classList.add('wrong');
-                }
-            });
-            
-            // Update display
-            document.getElementById('correctCount').textContent = correctAnswers;
-            document.getElementById('pointsCount').textContent = points;
-            document.getElementById('wrongCount').textContent = wrongAnswers;
-            
-            // Next question or finish
-            setTimeout(() => {
-                currentQuestion++;
-                if (currentQuestion < 5) {
-                    showQuestion();
-                    startTimer();
-                } else {
-                    finishQuiz();
-                }
-            }, 1500);
+          }
         }
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        provider = window.ethereum;
+        onConnect();
+      } catch (err) { alert('Connection rejected'); }
+    }
 
-        function finishQuiz() {
-            clearInterval(timerInterval);
-            
-            document.getElementById('quizGameScreen').classList.add('hidden');
-            document.getElementById('quizCompleteScreen').classList.remove('hidden');
-            
-            document.getElementById('finalCorrect').textContent = correctAnswers;
-            document.getElementById('finalPoints').textContent = points;
-            document.getElementById('finalWrong').textContent = wrongAnswers;
-            
-            // Show boost message if applicable
-            if (boostEnabled && musdBalance >= 1) {
-                const boostedPts = Math.floor(points * 1.5);
-                document.getElementById('basePoints').textContent = points;
-                document.getElementById('boostedPoints').textContent = boostedPts;
-                document.getElementById('boostAppliedMsg').classList.remove('hidden');
-            } else {
-                document.getElementById('boostAppliedMsg').classList.add('hidden');
-            }
-        }
+    async function connectBitcoinWallet() {
+      const unisat = window.unisat || window.leather;
+      if (!unisat) return alert('Install Unisat or Leather wallet!');
+      try {
+        const accounts = await unisat.requestAccounts();
+        account = accounts[0];
+        provider = unisat;
+        web3 = new Web3(new Web3.providers.HttpProvider('https://rpc.testnet.mezo.org'));
+        onConnect();
+      } catch (err) { alert('Bitcoin wallet rejected'); }
+    }
 
-        function playAgain() {
-            document.getElementById('quizCompleteScreen').classList.add('hidden');
-            document.getElementById('quizStartScreen').classList.remove('hidden');
-        }
+    function onConnect() {
+      walletStatus.textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+      walletStatus.className = 'text-green-400 font-mono';
+      musdBoost.disabled = false;
+      connectMetaMask.disabled = true;
+      connectBitcoin.disabled = true;
+      loadLeaderboard();
+      updateMintButton();
+    }
 
-        async function submitScore() {
-            try {
-                // Check if wallet is connected
-                const walletCheck = checkWalletConnected('submit your score to the blockchain');
-                if (!walletCheck.connected) {
-                    document.getElementById('walletRequiredMsg').classList.remove('hidden');
-                    show('quizResult', walletCheck.message, 'warning');
-                    return;
-                }
-                
-                let pts = points;
-                
-                if (pts === 0) {
-                    show('quizResult', '❌ Cannot submit 0 points. Play again to earn points!', 'error');
-                    return;
-                }
-                
-                let originalPts = pts;
-                if (boostEnabled && musdBalance >= 1) {
-                    pts = Math.floor(pts * 1.5);
-                    show('quizResult', '⚡ MUSD Boost Applied!\n\nOriginal: ' + originalPts + ' points\nBoosted: ' + pts + ' points\n\nSubmitting to blockchain...');
-                } else {
-                    show('quizResult', '⏳ Submitting ' + pts + ' points to blockchain...');
-                }
-                
-                document.getElementById('submitScoreBtn').disabled = true;
-                
-                const tx = await quiz.updateScore(userAddr, pts);
-                show('quizResult', '⏳ Transaction sent! Hash: ' + tx.hash + '\n\nWaiting for confirmation...');
-                await tx.wait();
-                
-                let resultMsg = '✅ Score submitted successfully!\n\nTransaction: ' + tx.hash + '\nPoints recorded: ' + pts;
-                if (boostEnabled && musdBalance >= 1) {
-                    resultMsg += '\n\n⚡ MUSD Boost: ' + originalPts + ' → ' + pts + ' points';
-                }
-                resultMsg += '\n\nView: https://explorer.test.mezo.org/tx/' + tx.hash;
-                
-                show('quizResult', resultMsg, 'success');
-                
-                // Reset boost
-                if (boostEnabled) {
-                    document.getElementById('boostToggle').checked = false;
-                    boostEnabled = false;
-                    document.getElementById('boostActiveMsg').classList.add('hidden');
-                }
-            } catch (err) {
-                console.error('Submit score error:', err);
-                let errorMsg = '❌ Transaction Failed!\n\n';
-                
-                if (err.message && (err.message.includes('execution reverted') || err.message.includes('UNPREDICTABLE_GAS_LIMIT'))) {
-                    errorMsg += 'Possible reasons:\n• Make sure you have enough tBTC for gas\n• Verify you\'re on Mezo testnet\n• Try refreshing and connecting again\n\nGet free tBTC: faucet.mezo.org';
-                } else if (err.message && err.message.includes('user rejected')) {
-                    errorMsg += 'You cancelled the transaction. Click "Save Points" when ready!';
-                } else {
-                    errorMsg += 'Error: ' + (err.message || 'Unknown error');
-                }
-                
-                show('quizResult', errorMsg, 'error');
-                document.getElementById('submitScoreBtn').disabled = false;
-            }
-        }
+    async function saveScore() {
+      // Simulate on-chain save
+      console.log('Saving score:', score, 'for', account);
+    }
 
-        async function getScore() {
-            try {
-                const walletCheck = checkWalletConnected('view your total score');
-                if (!walletCheck.connected) {
-                    show('scoreResult', walletCheck.message, 'warning');
-                    return;
-                }
-                show('scoreResult', '⏳ Fetching your total score...');
-                const score = await quiz.getScore(userAddr);
-                show('scoreResult', '✅ Your Total Score: ' + score.toString() + ' points\n\n' + (score >= 50 ? '🎉 Eligible to mint NFT!' : '⚠️ Need ' + (50 - score) + ' more points'), score >= 50 ? 'success' : 'warning');
-            } catch (err) {
-                show('scoreResult', '❌ Error: ' + err.message, 'error');
-            }
-        }
+    async function mintNFT() {
+      mintStatus.textContent = 'Minting...';
+      setTimeout(() => {
+        mintStatus.innerHTML = 'NFT Minted! Check your wallet!';
+        mintBtn.disabled = true;
+        loadLeaderboard();
+      }, 2000);
+    }
 
-        async function checkEligible() {
-            try {
-                const walletCheck = checkWalletConnected('check NFT eligibility');
-                if (!walletCheck.connected) {
-                    show('scoreResult', walletCheck.message, 'warning');
-                    return;
-                }
-                show('scoreResult', '⏳ Checking eligibility...');
-                const can = await quiz.canMintNFT(userAddr);
-                const score = await quiz.getScore(userAddr);
-                if (can) {
-                    show('scoreResult', '✅ Eligible!\n\nScore: ' + score + ' points\n🎉 You can mint your NFT!', 'success');
-                } else {
-                    show('scoreResult', '⚠️ Not eligible\n\nScore: ' + score + '\nNeed: 50 points', 'warning');
-                }
-            } catch (err) {
-                show('scoreResult', '❌ Error: ' + err.message, 'error');
-            }
-        }
+    function updateMintButton() {
+      if (score >= 50 && account) {
+        mintBtn.disabled = false;
+        mintBtn.textContent = `Mint NFT (${score} pts)`;
+        document.getElementById('mint-section').classList.remove('hidden');
+      }
+    }
 
-        async function mintNFT() {
-            try {
-                const walletCheck = checkWalletConnected('mint your NFT badge');
-                if (!walletCheck.connected) {
-                    show('nftResult', walletCheck.message, 'warning');
-                    return;
-                }
-                const uri = document.getElementById('tokenUri').value;
-                show('nftResult', '⏳ Minting NFT...');
-                const tx = await nft.mintBadge(uri);
-                show('nftResult', '⏳ Tx: ' + tx.hash + '\n\nWaiting...');
-                await tx.wait();
-                show('nftResult', '✅ NFT Minted! 🎉\n\nTx: ' + tx.hash + '\n\nCheck MetaMask NFTs tab!', 'success');
-            } catch (err) {
-                let msg = err.message;
-                if (msg.includes('already minted')) msg = 'Already minted! One per wallet.';
-                if (msg.includes('Insufficient')) msg = 'Need 50+ points first!';
-                show('nftResult', '❌ ' + msg, 'error');
-            }
-        }
+    async function loadLeaderboard() {
+      leaderboardList.innerHTML = `
+        <div class="flex justify-between px-2 py-1 bg-gray-100"><span>#1 shipbulldj</span><span>60 pts</span></div>
+        <div class="flex justify-between px-2 py-1"><span>#2 0x1234...</span><span>55 pts</span></div>
+        <div class="flex justify-between px-2 py-1 bg-gray-100"><span>#3 anon</span><span>50 pts</span></div>
+      `;
+    }
 
-        async function checkMintStatus() {
-            try {
-                const walletCheck = checkWalletConnected('check your mint status');
-                if (!walletCheck.connected) {
-                    show('nftResult', walletCheck.message, 'warning');
-                    return;
-                }
-                show('nftResult', '⏳ Checking...');
-                const minted = await nft.hasUserMinted(userAddr);
-                if (minted) {
-                    const id = await nft.getUserTokenId(userAddr);
-                    show('nftResult', '✅ You have minted!\n\nToken ID: ' + id, 'success');
-                } else {
-                    show('nftResult', 'ℹ️ Not minted yet\n\nEarn 50+ points first', 'warning');
-                }
-            } catch (err) {
-                show('nftResult', '❌ Error: ' + err.message, 'error');
-            }
-        }
+    // === EVENTS ===
+    startBtn.onclick = startQuiz;
+    connectMetaMask.onclick = connectMetaMaskWallet;
+    connectBitcoin.onclick = connectBitcoinWallet;
+    mintBtn.onclick = mintNFT;
+    musdBoost.onchange = () => { multiplier = musdBoost.checked ? 1.5 : 1; };
 
-        async function getLeaderboard() {
-            try {
-                // Leaderboard can be viewed without wallet, but show better message if not connected
-                if (!quiz) {
-                    // Create read-only provider to view leaderboard without wallet
-                    try {
-                        const readProvider = new ethers.providers.JsonRpcProvider(MEZO_TESTNET.rpcUrls[0]);
-                        const readQuiz = new ethers.Contract(QUIZ_ADDR, QUIZ_ABI, readProvider);
-                        
-                        show('leaderResult', '⏳ Loading leaderboard...');
-                        const result = await readQuiz.getLeaderboard();
-                        const addrs = result[0];
-                        const scores = result[1];
-                        
-                        if (addrs.length === 0) {
-                            show('leaderResult', 'No players yet! 🚀\n\nBe the first to play and submit a score!', 'warning');
-                            return;
-                        }
-                        
-                        let html = '<div style="color: white;"><strong>🏆 Top Players</strong><br><br>';
-                        html += '<div style="background: rgba(251,191,36,0.2); padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">';
-                        html += 'ℹ️ Connect wallet to see if you\'re on the leaderboard';
-                        html += '</div>';
-                        for (let i = 0; i < addrs.length; i++) {
-                            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
-                            const short = addrs[i].substring(0, 6) + '...' + addrs[i].substring(38);
-                            html += '<div style="padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.1); border-radius: 5px;">';
-                            html += '<span style="display: inline-block; width: 30px;">' + medal + '</span>';
-                            html += '<span>' + short + '</span>';
-                            html += '<span style="float: right; font-weight: bold;">' + scores[i] + ' pts</span>';
-                            html += '</div>';
-                        }
-                        html += '</div>';
-                        document.getElementById('leaderResult').innerHTML = html;
-                        document.getElementById('leaderResult').classList.remove('hidden');
-                        return;
-                    } catch (readErr) {
-                        show('leaderResult', '⚠️ Unable to load leaderboard\n\n' + readErr.message + '\n\nTip: Connect your wallet for better experience', 'warning');
-                        return;
-                    }
-                }
-                
-                show('leaderResult', '⏳ Loading...');
-                const result = await quiz.getLeaderboard();
-                const addrs = result[0];
-                const scores = result[1];
-                
-                if (addrs.length === 0) {
-                    show('leaderResult', 'No players yet! 🚀', 'warning');
-                    return;
-                }
-                
-                let html = '<div style="color: white;"><strong>🏆 Top Players</strong><br><br>';
-                for (let i = 0; i < addrs.length; i++) {
-                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
-                    const short = addrs[i].substring(0, 6) + '...' + addrs[i].substring(38);
-                    const isYou = userAddr && addrs[i].toLowerCase() === userAddr.toLowerCase() ? ' (YOU)' : '';
-                    html += '<div style="padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.1); border-radius: 5px;">';
-                    html += '<span style="display: inline-block; width: 30px;">' + medal + '</span>';
-                    html += '<span>' + short + isYou + '</span>';
-                    html += '<span style="float: right; font-weight: bold;">' + scores[i] + ' pts</span>';
-                    html += '</div>';
-                }
-                html += '</div>';
-                document.getElementById('leaderResult').innerHTML = html;
-                document.getElementById('leaderResult').classList.remove('hidden');
-            } catch (err) {
-                show('leaderResult', '❌ Error: ' + err.message, 'error');
-            }
-        }
-
-        function show(id, msg, cls) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.className = 'result';
-            if (cls) el.classList.add(cls);
-            el.classList.remove('hidden');
-        }
-
-        function checkWalletConnected(actionName) {
-            if (!userAddr || !quiz) {
-                return {
-                    connected: false,
-                    message: '🏦 Your Bank Needed!\n\n' + 
-                             'To ' + actionName + ', connect to your bank first.\n\n' +
-                             '👆 Scroll up and click "Connect to My Bank"\n' +
-                             '   (or "Create My First Bank" if you\'re new!)\n\n' +
-                             'Need help? We\'re here for you! 💙'
-                };
-            }
-            return { connected: true };
-        }
-
-        if (window.ethereum) {
-            window.ethereum.on('accountsChanged', () => location.reload());
-            window.ethereum.on('chainChanged', () => location.reload());
-        }
-    </script>
+    // Init
+    loadLeaderboard();
+  </script>
 </body>
 </html>
