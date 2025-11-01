@@ -74,15 +74,15 @@
         </div>
         <div class="mt-2 text-xs">
           <a href="https://testnet.mezo.org/" target="_blank" class="text-green-400 hover:underline">
-            Need MUSD? Swap tBTC here (connect → DEX)
+            Need MUSD? Swap BTC here (connect → DEX)
           </a>
         </div>
       </div>
 
       <!-- Faucet -->
       <div class="mt-3 text-xs">
-        <a href="https://faucet.test.mezo.org/" target="_blank" class="text-cyan-400 hover:underline" title="Get free tBTC for gas">
-          Free Practice Money: Grab tBTC here
+        <a href="https://faucet.test.mezo.org/" target="_blank" class="text-cyan-400 hover:underline" title="Get free BTC for gas">
+          Free Practice Money: Grab BTC here
         </a>
       </div>
     </div>
@@ -113,13 +113,17 @@
 
   <!-- Scripts -->
   <script>
-    // === CONFIG (Updated for Mezo Testnet) ===
+    // === CONFIG (Fixed for Official Mezo Testnet from ChainList) ===
     const MEZO_TESTNET = {
-      chainId: '0x7b7b', // Mezo Testnet: 31611 (0x7b7b)
+      chainId: '0x7b7b', // 31611 decimal (hex for MetaMask)
       chainName: 'Mezo Testnet',
-      rpcUrls: ['https://rpc.testnet.mezo.org'],
-      nativeCurrency: { name: 'tBTC', symbol: 'tBTC', decimals: 18 },
-      blockExplorerUrls: ['https://explorer.testnet.mezo.org']
+      rpcUrls: ['https://rpc.test.mezo.org'],
+      nativeCurrency: { 
+        name: 'Bitcoin', 
+        symbol: 'BTC',  // Official symbol (not tBTC) - fixes MetaMask warning
+        decimals: 18 
+      },
+      blockExplorerUrls: ['https://explorer.test.mezo.org']
     };
     const QUIZ_CONTRACT = '0x59bDB59bD7f7e7dD7d30f'; // Replace with real
     const NFT_CONTRACT = '0x03672f6CE531f0';
@@ -160,4 +164,163 @@
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startQuiz() {
+      score = 0;
+      questionIndex = 0;
+      generateQuestions();
+      startBtn.classList.add('hidden');
+      quizUI.classList.remove('hidden');
+      scoreDisplay.classList.remove('hidden');
+      currentScoreEl.textContent = score;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (questionIndex >= 5) return endQuiz();
+      const q = questions[questionIndex];
+      questionEl.textContent = `${q.a} × ${q.b} = ?`;
+      optionsEl.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-blue text-lg';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, q.answer);
+        optionsEl.appendChild(btn);
+      });
+      startTimer();
+    }
+
+    function startTimer() {
+      let time = 15;
+      timerEl.style.width = '100%';
+      timer = setInterval(() => {
+        time--;
+        timerEl.style.width = `${(time / 15) * 100}%`;
+        if (time <= 0) {
+          clearInterval(timer);
+          checkAnswer(null, questions[questionIndex].answer);
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(selected, correct) {
+      clearInterval(timer);
+      const points = selected === correct ? 10 * multiplier : -1;
+      score += points;
+      currentScoreEl.textContent = score;
+      feedbackEl.className = selected === correct ? 'correct' : 'wrong';
+      feedbackEl.textContent = selected === correct ? `Correct! +${10 * multiplier}` : 'Wrong! -1';
+      setTimeout(() => {
+        feedbackEl.textContent = '';
+        questionIndex++;
+        if (questionIndex < 5) showQuestion();
+        else endQuiz();
+      }, 1000);
+    }
+
+    function endQuiz() {
+      quizUI.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+      startBtn.textContent = 'Play Again';
+      if (account) saveScore();
+      updateMintButton();
+    }
+
+    // === WEB3 ===
+    async function connectMetaMaskWallet() {
+      if (!window.ethereum) return alert('Install MetaMask!');
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(window.ethereum);
+        const chainId = await web3.eth.getChainId();
+        if (chainId !== parseInt(MEZO_TESTNET.chainId, 16)) {  // Parse hex to decimal
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: MEZO_TESTNET.chainId }],
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [MEZO_TESTNET],
+              });
+            }
+          }
+        }
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        provider = window.ethereum;
+        onConnect();
+      } catch (err) { alert('Connection rejected'); }
+    }
+
+    async function connectBitcoinWallet() {
+      const unisat = window.unisat || window.leather;
+      if (!unisat) return alert('Install Unisat or Leather wallet!');
+      try {
+        const accounts = await unisat.requestAccounts();
+        account = accounts[0];
+        provider = unisat;
+        web3 = new Web3(new Web3.providers.HttpProvider('https://rpc.testnet.mezo.org'));
+        onConnect();
+      } catch (err) { alert('Bitcoin wallet rejected'); }
+    }
+
+    function onConnect() {
+      walletStatus.textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+      walletStatus.className = 'text-green-400 font-mono';
+      musdBoost.disabled = false;
+      connectMetaMask.disabled = true;
+      connectBitcoin.disabled = true;
+      loadLeaderboard();
+      updateMintButton();
+    }
+
+    async function saveScore() {
+      // Simulate on-chain save (replace with real contract call)
+      console.log('Saving score:', score, 'for', account);
+    }
+
+    async function mintNFT() {
+      mintStatus.textContent = 'Minting...';
+      setTimeout(() => {
+        mintStatus.innerHTML = 'NFT Minted! Check your wallet!';
+        mintBtn.disabled = true;
+        loadLeaderboard();
+      }, 2000);
+    }
+
+    function updateMintButton() {
+      if (score >= 50 && account) {
+        mintBtn.disabled = false;
+        mintBtn.textContent = `Mint NFT (${score} pts)`;
+        document.getElementById('mint-section').classList.remove('hidden');
+      }
+    }
+
+    async function loadLeaderboard() {
+      leaderboardList.innerHTML = `
+        <div class="flex justify-between px-2 py-1 bg-gray-100"><span>#1 shipbulldj</span><span>60 pts</span></div>
+        <div class="flex justify-between px-2 py-1"><span>#2 0x1234...</span><span>55 pts</span></div>
+        <div class="flex justify-between px-2 py-1 bg-gray-100"><span>#3 anon</span><span>50 pts</span></div>
+      `;
+    }
+
+    // === EVENTS ===
+    startBtn.onclick = startQuiz;
+    connectMetaMask.onclick = connectMetaMaskWallet;
+    connectBitcoin.onclick = connectBitcoinWallet;
+    mintBtn.onclick = mintNFT;
+    musdBoost.onchange = () => { multiplier = musdBoost.checked ? 1.5 : 1; };
+
+    // Init
+    loadLeaderboard();
+  </script>
+</body>
+</html>
