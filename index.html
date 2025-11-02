@@ -15,11 +15,12 @@
         button.success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
         button.large { padding: 20px 40px; font-size: 20px; }
         input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; font-size: 14px; }
-        .result { background: rgba(0,0,0,0.3); padding: 15px; margin-top: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
-        .result::-webkit-scrollbar { width: 8px; }
-        .result::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        .result::-webkit-scrollbar-thumb { background: rgba(74,172,254,0.5); border-radius: 4px; }
-        .result::-webkit-scrollbar-thumb:hover { background: rgba(74,172,254,0.7); }
+        .result { background: rgba(0,0,0,0.3); padding: 15px; margin-top: 10px; border-radius: 5px; font-family: monospace; font-size: 14px; white-space: pre-wrap; }
+        .result.scrollable { max-height: 400px; overflow-y: auto; }
+        .result.scrollable::-webkit-scrollbar { width: 8px; }
+        .result.scrollable::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .result.scrollable::-webkit-scrollbar-thumb { background: rgba(74,172,254,0.5); border-radius: 4px; }
+        .result.scrollable::-webkit-scrollbar-thumb:hover { background: rgba(74,172,254,0.7); }
         .success { background: rgba(16,185,129,0.3); border-left: 4px solid #10b981; }
         .error { background: rgba(239,68,68,0.3); border-left: 4px solid #ef4444; }
         .warning { background: rgba(251,191,36,0.3); border-left: 4px solid #fbbf24; }
@@ -349,8 +350,8 @@
             
             <div class="info-box">
                 <strong>💡 Cool Fact:</strong> Connect once, save all your scores forever!<br>
-                <strong>🎁 Free Practice Money:</strong> <a href="https://faucet.mezo.org" target="_blank" style="color: #4facfe;">Grab some here</a><br>
-                <strong>⚡ Secret Bonus:</strong> Hold 1+ MUSD tokens for 1.5x points!<br>
+                <strong>🎁 Free Practice Money:</strong> <a href="https://faucet.test.mezo.org" target="_blank" style="color: #4facfe;">Get tBTC here</a><br>
+                <strong>⚡ Bonus:</strong> Swap for MUSD at <a href="https://testnet.mezo.org/" target="_blank" style="color: #ffd700;">testnet.mezo.org</a> for 1.5x points!<br>
                 <strong>📚 First timer?</strong> <a href="../SECURITY_GUIDE.md" target="_blank" style="color: #ffd700; font-weight: bold;">Read our super simple guide</a>
             </div>
         </div>
@@ -802,7 +803,7 @@
                 let errorMsg = '❌ Transaction Failed!\n\n';
                 
                 if (err.message && (err.message.includes('execution reverted') || err.message.includes('UNPREDICTABLE_GAS_LIMIT'))) {
-                    errorMsg += 'Possible reasons:\n• Make sure you have enough tBTC for gas\n• Verify you\'re on Mezo testnet\n• Try refreshing and connecting again\n\nGet free tBTC: faucet.mezo.org';
+                    errorMsg += 'Possible reasons:\n• Make sure you have enough tBTC for gas\n• Verify you\'re on Mezo testnet\n• Try refreshing and connecting again\n\nGet free tBTC: faucet.test.mezo.org';
                 } else if (err.message && err.message.includes('user rejected')) {
                     errorMsg += 'You cancelled the transaction. Click "Save Points" when ready!';
                 } else {
