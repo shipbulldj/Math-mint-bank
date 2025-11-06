@@ -56,12 +56,14 @@ mathmint-quiz/          ← Smart contracts + tests
 └── contracts/
 ├── QuizContract.sol
 └── MathMintNFT.sol
+
 Math-mint-bank/         ← Demo frontend (this repo)
 ├── src/
 │   ├── components/Quiz.tsx
 │   └── App.tsx
 ├── public/
 └── vite.config.ts
+
 text## 🚀 Quick Start
 ```bash
 # 1. Clone both repos
