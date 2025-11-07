@@ -188,6 +188,12 @@
             transform: scale(1.05);
         }
         
+        /* Resource links hover */
+        .card a:hover, .card div[onclick]:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
         /* Loading */
         .loading { text-align: center; padding: 20px; opacity: 0.7; }
         .spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -477,10 +483,10 @@
                 
                 <!-- NFT Badge -->
                 <div class="card">
-                    <h2>🎨 Achievement Badge</h2>
+                    <h2>🎨 My Magical Badges Collection</h2>
                     <div id="nftContent" class="loading">
                         <div class="spinner"></div>
-                        <p>Checking NFT status...</p>
+                        <p>Checking your badge collection...</p>
                     </div>
                 </div>
                 
@@ -619,6 +625,66 @@
                 </div>
             </div>
             
+            <!-- Magical Badges -->
+            <div class="card" style="background: linear-gradient(135deg, rgba(240,147,251,0.3), rgba(245,87,108,0.3)); border: 2px solid rgba(240,147,251,0.5);">
+                <h3 style="font-size: 1.5em; margin-bottom: 15px;">✨ Collect Magical Badges!</h3>
+                <p style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">
+                    As you play and earn points, you unlock super cute badges! Each one is special and yours forever! 🎨
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #f093fb;">
+                        <div style="font-size: 3em; margin: 10px 0;">🐲</div>
+                        <strong style="font-size: 1.1em;">Baby Dragon</strong><br>
+                        <span style="font-size: 0.85em; opacity: 0.9;">Level 1</span><br>
+                        <span style="color: #fbbf24; font-weight: bold;">50 points</span><br>
+                        <span style="font-size: 0.85em; opacity: 0.8;">Your first magical friend!</span>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #f5576c;">
+                        <div style="font-size: 3em; margin: 10px 0;">🦄✨</div>
+                        <strong style="font-size: 1.1em;">Sparkle Unicorn</strong><br>
+                        <span style="font-size: 0.85em; opacity: 0.9;">Level 2</span><br>
+                        <span style="color: #fbbf24; font-weight: bold;">100 points</span><br>
+                        <span style="font-size: 0.85em; opacity: 0.8;">Rare and sparkly!</span>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #4facfe;">
+                        <div style="font-size: 3em; margin: 10px 0;">🐰🚀</div>
+                        <strong style="font-size: 1.1em;">Space Bunny</strong><br>
+                        <span style="font-size: 0.85em; opacity: 0.9;">Level 3</span><br>
+                        <span style="color: #fbbf24; font-weight: bold;">200 points</span><br>
+                        <span style="font-size: 0.85em; opacity: 0.8;">Hopping through the stars!</span>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #00f2fe;">
+                        <div style="font-size: 3em; margin: 10px 0;">🐱⭐</div>
+                        <strong style="font-size: 1.1em;">Galaxy Kitten</strong><br>
+                        <span style="font-size: 0.85em; opacity: 0.9;">Level 4</span><br>
+                        <span style="color: #fbbf24; font-weight: bold;">500 points</span><br>
+                        <span style="font-size: 0.85em; opacity: 0.8;">Epic cosmic companion!</span>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #ffd700;">
+                        <div style="font-size: 3em; margin: 10px 0;">👑🐉</div>
+                        <strong style="font-size: 1.1em;">Dragon King</strong><br>
+                        <span style="font-size: 0.85em; opacity: 0.9;">Level 5</span><br>
+                        <span style="color: #ffd700; font-weight: bold;">1000 points</span><br>
+                        <span style="font-size: 0.85em; opacity: 0.8;">Supreme ruler of all badges!</span>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <strong>🎮 How to Collect:</strong>
+                    <p style="margin: 10px 0; line-height: 1.7;">
+                        1. Play quiz and earn points<br>
+                        2. Save your points to your bank<br>
+                        3. When you reach enough points, mint your badge!<br>
+                        4. It's yours forever - nobody can take it away!
+                    </p>
+                </div>
+            </div>
+            
             <!-- Practice Makes Perfect -->
             <div class="card" style="background: linear-gradient(135deg, rgba(74,172,254,0.3), rgba(16,185,129,0.3)); border: 2px solid rgba(74,172,254,0.5);">
                 <h3 style="font-size: 1.5em; margin-bottom: 15px;">🎮 Why This is Testnet (Practice Mode)</h3>
@@ -643,6 +709,10 @@
                     Ask your parents or teacher to check out these resources together:
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div onclick="showCreateBankGuide()" style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; cursor: pointer; border-left: 4px solid #fbbf24; transition: all 0.2s;">
+                        <strong>🎥 Video: How to Create MetaMask Wallet</strong><br>
+                        <span style="font-size: 0.9em; opacity: 0.9;">Step-by-step video tutorial for beginners</span>
+                    </div>
                     <a href="../SECURITY_GUIDE.md" target="_blank" style="background: rgba(74,172,254,0.2); padding: 15px; border-radius: 10px; text-decoration: none; color: inherit; border-left: 4px solid #4facfe;">
                         <strong>🔐 Complete Security Guide</strong><br>
                         <span style="font-size: 0.9em; opacity: 0.9;">Detailed safety tips for the whole family</span>
@@ -704,11 +774,22 @@
     
     <!-- Create Bank Guide Modal -->
     <div id="createBankModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px);">
-        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 40px; border-radius: 20px; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 40px; border-radius: 20px; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
             <h2 style="text-align: center; margin-bottom: 15px; font-size: 2em; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 15px;">🌟 Let's Create Your First Bank!</h2>
             <p style="text-align: center; font-size: 1.2em; margin-bottom: 25px;">
                 🎉 <strong>Exciting!</strong> You're about to open your own bank. Let me walk you through it, friend!
             </p>
+            
+            <!-- Video Tutorial -->
+            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 25px 0;">
+                <h3 style="text-align: center; margin: 0 0 15px 0; font-size: 1.3em;">🎥 Watch This Quick Tutorial</h3>
+                <p style="text-align: center; font-size: 1.05em; margin-bottom: 15px;">Follow along with this video to create your MetaMask wallet!</p>
+                <video controls style="width: 100%; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <source src="https://customer-assets.emergentagent.com/job_mathmint-quiz/artifacts/lxymrigy_create_metamask_wallet.mp4" type="video/mp4">
+                    Your browser doesn't support video playback.
+                </video>
+                <p style="text-align: center; font-size: 0.9em; margin-top: 10px; opacity: 0.8;">💡 Tip: Pause and replay as many times as you need!</p>
+            </div>
             
             <div style="background: rgba(255,255,255,0.15); padding: 20px; margin: 15px 0; border-radius: 12px; border-left: 4px solid #4facfe;">
                 <h3 style="margin: 0 0 10px 0; font-size: 1.3em;">🦊 Step 1: Install MetaMask (Your Bank Manager)</h3>
@@ -950,7 +1031,6 @@
                 
                 document.getElementById('notConnected').classList.add('hidden');
                 document.getElementById('connected').classList.remove('hidden');
-                document.getElementById('boostHint').classList.remove('hidden');
                 
                 await refreshBankData();
                 
@@ -996,14 +1076,27 @@
                 if (musdBalance >= 1) {
                     // User has MUSD - show the toggle
                     document.getElementById('musdStatus').textContent = '✅ Boost available!';
-                    document.getElementById('boostHintNoMUSD').classList.add('hidden');
-                    document.getElementById('boostHintWithMUSD').classList.remove('hidden');
-                    document.getElementById('musdBalanceDisplay').textContent = `You have ${musdBalance.toFixed(2)} MUSD! Turn ON the boost before playing for 1.5x points! 🔥`;
+                    
+                    // Update boost hints if they exist (they're in Quiz tab)
+                    const boostHintNoMUSD = document.getElementById('boostHintNoMUSD');
+                    const boostHintWithMUSD = document.getElementById('boostHintWithMUSD');
+                    const musdBalanceDisplay = document.getElementById('musdBalanceDisplay');
+                    
+                    if (boostHintNoMUSD) boostHintNoMUSD.classList.add('hidden');
+                    if (boostHintWithMUSD) boostHintWithMUSD.classList.remove('hidden');
+                    if (musdBalanceDisplay) {
+                        musdBalanceDisplay.textContent = `You have ${musdBalance.toFixed(2)} MUSD! Turn ON the boost before playing for 1.5x points! 🔥`;
+                    }
                 } else {
                     // User doesn't have MUSD - show the swap prompt
                     document.getElementById('musdStatus').textContent = 'Need 1+ MUSD for boost';
-                    document.getElementById('boostHintNoMUSD').classList.remove('hidden');
-                    document.getElementById('boostHintWithMUSD').classList.add('hidden');
+                    
+                    // Update boost hints if they exist (they're in Quiz tab)
+                    const boostHintNoMUSD = document.getElementById('boostHintNoMUSD');
+                    const boostHintWithMUSD = document.getElementById('boostHintWithMUSD');
+                    
+                    if (boostHintNoMUSD) boostHintNoMUSD.classList.remove('hidden');
+                    if (boostHintWithMUSD) boostHintWithMUSD.classList.add('hidden');
                 }
             } catch (err) {
                 console.error('MUSD balance error:', err);
@@ -1024,40 +1117,145 @@
             checkNFTStatus();
         }
         
+        // Badge Tiers System
+        const badgeTiers = [
+            { level: 1, name: "Baby Dragon", emoji: "🐲", points: 50, color: "#f093fb", description: "Your first magical friend!" },
+            { level: 2, name: "Sparkle Unicorn", emoji: "🦄✨", points: 100, color: "#f5576c", description: "Rare and sparkly!" },
+            { level: 3, name: "Space Bunny", emoji: "🐰🚀", points: 200, color: "#4facfe", description: "Hopping through the stars!" },
+            { level: 4, name: "Galaxy Kitten", emoji: "🐱⭐", points: 500, color: "#00f2fe", description: "Epic cosmic companion!" },
+            { level: 5, name: "Dragon King", emoji: "👑🐉", points: 1000, color: "#ffd700", description: "Supreme ruler of all badges!" }
+        ];
+        
+        function getBadgeForPoints(points) {
+            for (let i = badgeTiers.length - 1; i >= 0; i--) {
+                if (points >= badgeTiers[i].points) {
+                    return badgeTiers[i];
+                }
+            }
+            return null;
+        }
+        
+        function getNextBadge(points) {
+            for (let i = 0; i < badgeTiers.length; i++) {
+                if (points < badgeTiers[i].points) {
+                    return badgeTiers[i];
+                }
+            }
+            return null;
+        }
+        
         async function checkNFTStatus() {
             const content = document.getElementById('nftContent');
             try {
                 const hasMinted = await nft.hasMinted(userAddr);
                 const canMint = await quiz.canMintNFT(userAddr);
-                const savedScore = await quiz.getScore(userAddr);
+                const savedScore = parseInt(await quiz.getScore(userAddr));
                 
                 if (hasMinted) {
                     const balance = await nft.balanceOf(userAddr);
+                    const currentBadge = getBadgeForPoints(savedScore);
+                    
+                    let badgeDisplay = '';
+                    if (currentBadge) {
+                        badgeDisplay = `
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="font-size: 5em; margin: 20px 0;">${currentBadge.emoji}</div>
+                                <h3 style="font-size: 1.8em; color: ${currentBadge.color}; margin: 10px 0;">${currentBadge.name}</h3>
+                                <p style="font-size: 1.1em; opacity: 0.9;">${currentBadge.description}</p>
+                                <div style="background: rgba(255,215,0,0.2); padding: 12px; border-radius: 10px; margin-top: 15px;">
+                                    <strong>Level ${currentBadge.level} Badge Holder!</strong><br>
+                                    You've earned ${savedScore} points! 🌟
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    const nextBadge = getNextBadge(savedScore);
+                    let nextBadgeInfo = '';
+                    if (nextBadge) {
+                        const pointsNeeded = nextBadge.points - savedScore;
+                        nextBadgeInfo = `
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                                <strong>🎯 Next Badge: ${nextBadge.emoji} ${nextBadge.name}</strong><br>
+                                <span style="font-size: 0.95em; opacity: 0.9;">Only ${pointsNeeded} more points to unlock!</span>
+                                <div style="background: rgba(0,0,0,0.2); height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe); width: ${(savedScore / nextBadge.points * 100)}%; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        nextBadgeInfo = `
+                            <div style="background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,170,0,0.3)); padding: 15px; border-radius: 10px; margin-top: 20px; border: 2px solid rgba(255,215,0,0.5);">
+                                <strong>👑 MAX LEVEL ACHIEVED!</strong><br>
+                                <span style="font-size: 0.95em;">You've collected all badges! You're a legend! 🏆</span>
+                            </div>
+                        `;
+                    }
+                    
                     content.innerHTML = `
                         <div class="message success">
                             <strong>🎉 You own ${balance} MathMint Badge${balance > 1 ? 's' : ''}!</strong><br>
-                            Check your MetaMask NFTs tab to view it!
+                            Check your MetaMask NFTs tab to view them!
                         </div>
+                        ${badgeDisplay}
+                        ${nextBadgeInfo}
                     `;
                 } else if (canMint) {
+                    const badge = getBadgeForPoints(savedScore);
                     content.innerHTML = `
-                        <div class="message success">
-                            <strong>✅ Eligible to Mint!</strong><br>
-                            You have ${savedScore} points (need 50+)
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 6em; margin: 20px 0;">${badge.emoji}</div>
+                            <h3 style="font-size: 2em; color: ${badge.color}; margin: 10px 0;">Ready to Mint!</h3>
+                            <div style="background: linear-gradient(135deg, rgba(${badge.color === '#f093fb' ? '240,147,251' : '245,87,108'},0.3), rgba(255,215,0,0.3)); padding: 20px; border-radius: 15px; margin: 20px 0;">
+                                <h4 style="font-size: 1.5em; margin: 10px 0;">🎨 ${badge.name}</h4>
+                                <p style="font-size: 1.1em; margin: 10px 0;">${badge.description}</p>
+                                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                                    <strong>Level ${badge.level} Badge</strong><br>
+                                    <span style="font-size: 0.9em;">You've earned ${savedScore} points!</span>
+                                </div>
+                            </div>
+                            <button class="success large" onclick="mintBadge()" style="font-size: 1.3em; padding: 20px 40px;">
+                                ✨ Mint My ${badge.name}! ✨
+                            </button>
                         </div>
-                        <button class="success large" onclick="mintBadge()">🎨 Mint My Badge!</button>
                     `;
                 } else {
-                    const needed = 50 - parseInt(savedScore);
+                    const nextBadge = badgeTiers[0]; // First badge
+                    const needed = nextBadge.points - savedScore;
+                    const progress = (savedScore / nextBadge.points * 100);
+                    
                     content.innerHTML = `
-                        <div class="message info">
-                            <strong>Keep Playing! 🎯</strong><br>
-                            You have ${savedScore} points. Need ${needed} more points to mint your badge!
+                        <div style="text-align: center;">
+                            <div style="font-size: 4em; margin: 20px 0; opacity: 0.5; filter: grayscale(100%);">${nextBadge.emoji}</div>
+                            <h3 style="font-size: 1.5em; margin: 10px 0;">Almost There!</h3>
+                            <p style="font-size: 1.1em; margin: 15px 0;">
+                                Collect <strong>${needed} more points</strong> to unlock your first badge:<br>
+                                <strong style="color: ${nextBadge.color};">${nextBadge.name} ${nextBadge.emoji}</strong>
+                            </p>
+                            <div style="background: rgba(0,0,0,0.2); height: 20px; border-radius: 10px; margin: 20px 0; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe); width: ${progress}%; transition: width 0.5s;"></div>
+                            </div>
+                            <p style="font-size: 1.05em; opacity: 0.9;">You have ${savedScore} / ${nextBadge.points} points</p>
+                            
+                            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-top: 25px;">
+                                <strong style="font-size: 1.2em;">🌟 All Available Badges:</strong>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                                    ${badgeTiers.map(badge => `
+                                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; ${savedScore >= badge.points ? `border: 2px solid ${badge.color};` : 'opacity: 0.5;'}">
+                                            <div style="font-size: 2.5em;">${badge.emoji}</div>
+                                            <strong>${badge.name}</strong><br>
+                                            <span style="font-size: 0.85em;">Level ${badge.level}</span><br>
+                                            <span style="font-size: 0.8em;">${badge.points} pts</span>
+                                            ${savedScore >= badge.points ? '<br><span style="color: #10b981; font-size: 0.9em;">✓ Unlocked!</span>' : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     `;
                 }
             } catch (err) {
-                content.innerHTML = `<div class="message error">Error checking NFT status: ${err.message}</div>`;
+                content.innerHTML = `<div class="message error">Error checking badge status: ${err.message}</div>`;
             }
         }
         
@@ -1113,19 +1311,25 @@
         
         // MUSD Boost
         function toggleBoost() {
-            boostEnabled = document.getElementById('boostToggle').checked;
+            const toggleElement = document.getElementById('boostToggle');
+            if (!toggleElement) return;
+            
+            boostEnabled = toggleElement.checked;
             if (boostEnabled && musdBalance < 1) {
-                document.getElementById('boostToggle').checked = false;
+                toggleElement.checked = false;
                 boostEnabled = false;
                 alert('You need 1+ MUSD to enable boost!');
                 return;
             }
             
             // Show/hide boost active message
-            if (boostEnabled) {
-                document.getElementById('boostActiveMsg').classList.remove('hidden');
-            } else {
-                document.getElementById('boostActiveMsg').classList.add('hidden');
+            const boostActiveMsg = document.getElementById('boostActiveMsg');
+            if (boostActiveMsg) {
+                if (boostEnabled) {
+                    boostActiveMsg.classList.remove('hidden');
+                } else {
+                    boostActiveMsg.classList.add('hidden');
+                }
             }
         }
         
